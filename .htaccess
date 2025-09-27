@@ -1,0 +1,12 @@
+# Block direct access to audio files
+<FilesMatch "\.(mp3|wav|m4a|aac|flac)$">
+    Order deny,allow
+    Deny from all
+    Allow from 127.0.0.1
+    Allow from localhost
+</FilesMatch>
+
+# Alternative approach - redirect audio file requests
+RewriteEngine on
+RewriteCond %{HTTP_REFERER} !^https?://([^.]+\.)?yourdomain\.com [NC]
+RewriteRule \.(mp3|wav|m4a|aac|flac)$ - [F]
