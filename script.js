@@ -214,20 +214,28 @@ class AudioPlayer {
         const height = canvas.height;
         const color = this.trackColors.get(src) || '#2ECC71';
 
-        // Enable crisp rendering
-        ctx.imageSmoothingEnabled = false;
+        // Enable high-quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        ctx.clearRect(0, 0, width, height);
+        // Scale for high DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        if (dpr !== 1) {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
 
-        const centerY = height / 2;
-        const stepX = width / (waveform.length - 1);
+        ctx.clearRect(0, 0, width / dpr, height / dpr);
+
+        const centerY = (height / dpr) / 2;
+        const stepX = (width / dpr) / (waveform.length - 1);
 
         ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.shadowBlur = 2;
-        ctx.shadowColor = color;
 
         // Draw upper spiky waveform
         ctx.beginPath();
@@ -236,7 +244,7 @@ class AudioPlayer {
         for (let i = 0; i < waveform.length; i++) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY - (amplitude * height * 0.45);
+            const y = centerY - (amplitude * (height / dpr) * 0.4);
 
             if (i === 0) {
                 ctx.lineTo(x, y);
@@ -244,7 +252,7 @@ class AudioPlayer {
                 ctx.lineTo(x, y);
             }
         }
-        ctx.lineTo(width, centerY);
+        ctx.lineTo(width / dpr, centerY);
         ctx.stroke();
 
         // Draw lower spiky waveform (mirrored)
@@ -254,7 +262,7 @@ class AudioPlayer {
         for (let i = 0; i < waveform.length; i++) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY + (amplitude * height * 0.45);
+            const y = centerY + (amplitude * (height / dpr) * 0.4);
 
             if (i === 0) {
                 ctx.lineTo(x, y);
@@ -262,7 +270,7 @@ class AudioPlayer {
                 ctx.lineTo(x, y);
             }
         }
-        ctx.lineTo(width, centerY);
+        ctx.lineTo(width / dpr, centerY);
         ctx.stroke();
     }
 
@@ -273,10 +281,23 @@ class AudioPlayer {
         const baseColor = this.trackColors.get(src) || '#2ECC71';
         const progressedColor = this.darkenColor(baseColor, 0.3);
 
-        ctx.clearRect(0, 0, width, height);
+        // Enable high-quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        const centerY = height / 2;
-        const stepX = width / (waveform.length - 1);
+        // Scale for high DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        if (dpr !== 1) {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        ctx.clearRect(0, 0, width / dpr, height / dpr);
+
+        const centerY = (height / dpr) / 2;
+        const stepX = (width / dpr) / (waveform.length - 1);
         const progressIndex = Math.floor(progress * waveform.length);
 
         ctx.lineWidth = 2;
@@ -293,7 +314,7 @@ class AudioPlayer {
             for (let i = 0; i <= progressIndex && i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY - (amplitude * height * 0.4);
+                const y = centerY - (amplitude * (height / dpr) * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -304,7 +325,7 @@ class AudioPlayer {
             for (let i = 0; i <= progressIndex && i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY + (amplitude * height * 0.4);
+                const y = centerY + (amplitude * (height / dpr) * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -321,7 +342,7 @@ class AudioPlayer {
             for (let i = progressIndex; i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY - (amplitude * height * 0.4);
+                const y = centerY - (amplitude * (height / dpr) * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -332,19 +353,19 @@ class AudioPlayer {
             for (let i = progressIndex; i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY + (amplitude * height * 0.4);
+                const y = centerY + (amplitude * (height / dpr) * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
         }
 
         // Draw progress indicator
-        const progressX = progress * width;
+        const progressX = progress * (width / dpr);
         ctx.strokeStyle = '#FF3B30';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(progressX, 0);
-        ctx.lineTo(progressX, height);
+        ctx.lineTo(progressX, height / dpr);
         ctx.stroke();
     }
 
@@ -560,44 +581,49 @@ class AudioPlayer {
         const height = canvas.height;
         const color = this.trackColors.get(src) || '#2ECC71';
 
-        ctx.imageSmoothingEnabled = false;
-        ctx.clearRect(0, 0, width, height);
+        // Enable high-quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        const centerY = height / 2;
-        const barCount = 32; // Number of frequency bars
-        const barWidth = width / barCount;
+        // Scale for high DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        if (dpr !== 1) {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        ctx.clearRect(0, 0, width / dpr, height / dpr);
+
+        const centerY = (height / dpr) / 2;
+        const barCount = 64; // More bars for smoother visualization
+        const barWidth = (width / dpr) / barCount;
         const dataStep = Math.floor(frequencyData.length / barCount);
 
-        // Create gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(0.5, this.lightenColor(color, 0.3));
-        gradient.addColorStop(1, color);
-
-        ctx.fillStyle = gradient;
+        // Clean, minimal bars without gradients
+        ctx.fillStyle = color;
 
         // Draw frequency bars
         for (let i = 0; i < barCount; i++) {
             const dataIndex = i * dataStep;
             const amplitude = frequencyData[dataIndex] / 255; // Normalize to 0-1
-            const barHeight = amplitude * height * 0.8;
+            const barHeight = amplitude * (height / dpr) * 0.7;
 
             const x = i * barWidth;
             const y = centerY - (barHeight / 2);
 
-            // Add some spacing between bars
-            const actualBarWidth = barWidth * 0.8;
+            // Minimal spacing and clean edges
+            const actualBarWidth = Math.max(1, barWidth * 0.9);
             const barX = x + (barWidth - actualBarWidth) / 2;
 
-            // Draw bar
-            ctx.fillRect(barX, y, actualBarWidth, barHeight);
-
-            // Add glow effect for higher frequencies
-            if (amplitude > 0.6) {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = color;
+            // Draw clean bar with rounded edges (fallback for older browsers)
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(barX, y, actualBarWidth, barHeight, 1);
+                ctx.fill();
+            } else {
                 ctx.fillRect(barX, y, actualBarWidth, barHeight);
-                ctx.shadowBlur = 0;
             }
         }
 
