@@ -371,6 +371,11 @@ class AudioPlayer {
             return;
         }
 
+        if (this.currentTrack === track && this.currentAudio && this.currentAudio.paused) {
+            this.resumeTrack();
+            return;
+        }
+
         if (this.currentAudio) {
             this.stopTrack();
         }
@@ -379,6 +384,28 @@ class AudioPlayer {
             this.currentAudio = new Audio(src);
             this.currentTrack = track;
 
+
+            // Set up real-time audio analysis for reactive visualizer
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+
+            if (this.audioContext) {
+                const source = this.audioContext.createMediaElementSource(this.currentAudio);
+                const analyser = this.audioContext.createAnalyser();
+                analyser.fftSize = 128;
+                analyser.smoothingTimeConstant = 0.8;
+
+                source.connect(analyser);
+                analyser.connect(this.audioContext.destination);
+
+                this.realtimeAnalysers.set(src, {
+                    analyser: analyser,
+                    dataArray: new Uint8Array(analyser.frequencyBinCount)
+                });
+
+                this.startReactiveVisualization(canvas, src);
+            }
 
             await this.currentAudio.play();
 
@@ -427,6 +454,17 @@ class AudioPlayer {
                     track.classList.remove('playing');
                     playButton.textContent = '▶';
                     playButton.classList.remove('playing');
+
+                    // Stop reactive visualization and show static waveform
+                    if (this.animationId) {
+                        cancelAnimationFrame(this.animationId);
+                        this.animationId = null;
+                    }
+
+                    const waveform = this.waveformData.get(src);
+                    if (waveform) {
+                        this.drawStaticWaveform(canvas, waveform, src);
+                    }
                 }
             });
 
@@ -439,6 +477,20 @@ class AudioPlayer {
     pauseTrack() {
         if (this.currentAudio) {
             this.currentAudio.pause();
+        }
+    }
+
+    resumeTrack() {
+        if (this.currentAudio && this.currentTrack) {
+            const canvas = this.currentTrack.querySelector('.waveform');
+            const src = this.currentTrack.dataset.src;
+
+            this.currentAudio.play();
+
+            // Restart reactive visualization
+            if (this.realtimeAnalysers.has(src)) {
+                this.startReactiveVisualization(canvas, src);
+            }
         }
     }
 
@@ -477,7 +529,96 @@ class AudioPlayer {
             // Stop effects when resetting
             this.rainEffect.stop();
             this.lightningEffect.stop();
+            // Stop reactive visualization
+            if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+            }
         }
+    }
+
+    startReactiveVisualization(canvas, src) {
+        const ctx = canvas.getContext('2d');
+        const analyzer = this.realtimeAnalysers.get(src);
+
+        if (!analyzer) return;
+
+        const animate = () => {
+            if (this.currentAudio && !this.currentAudio.paused && this.currentTrack) {
+                analyzer.analyser.getByteFrequencyData(analyzer.dataArray);
+                this.drawReactiveBarVisualizer(canvas, analyzer.dataArray, src);
+                this.animationId = requestAnimationFrame(animate);
+            }
+        };
+
+        animate();
+    }
+
+    drawReactiveBarVisualizer(canvas, frequencyData, src) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const color = this.trackColors.get(src) || '#2ECC71';
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, width, height);
+
+        const centerY = height / 2;
+        const barCount = 32; // Number of frequency bars
+        const barWidth = width / barCount;
+        const dataStep = Math.floor(frequencyData.length / barCount);
+
+        // Create gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(0.5, this.lightenColor(color, 0.3));
+        gradient.addColorStop(1, color);
+
+        ctx.fillStyle = gradient;
+
+        // Draw frequency bars
+        for (let i = 0; i < barCount; i++) {
+            const dataIndex = i * dataStep;
+            const amplitude = frequencyData[dataIndex] / 255; // Normalize to 0-1
+            const barHeight = amplitude * height * 0.8;
+
+            const x = i * barWidth;
+            const y = centerY - (barHeight / 2);
+
+            // Add some spacing between bars
+            const actualBarWidth = barWidth * 0.8;
+            const barX = x + (barWidth - actualBarWidth) / 2;
+
+            // Draw bar
+            ctx.fillRect(barX, y, actualBarWidth, barHeight);
+
+            // Add glow effect for higher frequencies
+            if (amplitude > 0.6) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+                ctx.fillRect(barX, y, actualBarWidth, barHeight);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Update rain and lightning effects based on frequency data
+        const avgAmplitude = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length / 255;
+        this.rainEffect.updateIntensity(avgAmplitude);
+
+        // Trigger lightning on bass hits
+        const bassData = frequencyData.slice(0, 8);
+        const bassLevel = bassData.reduce((a, b) => a + b, 0) / bassData.length;
+        if (bassLevel > 160) {
+            this.lightningEffect.trigger();
+        }
+    }
+
+    lightenColor(color, amount) {
+        const hex = color.replace('#', '');
+        const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + Math.round(255 * amount));
+        const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + Math.round(255 * amount));
+        const b = Math.min(255, parseInt(hex.substr(4, 2), 16) + Math.round(255 * amount));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 
 }
