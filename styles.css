@@ -258,7 +258,7 @@ body {
 
 @media (max-width: 768px) {
     .container {
-        padding: 40px 15px;
+        padding: 40px 10px;
     }
 
     .scrolling-banner {
@@ -270,59 +270,74 @@ body {
         padding: 0 20px;
     }
 
-
     .header {
         margin-top: 70px;
+        margin-bottom: 40px;
     }
 
     .track {
         padding: 15px;
-        margin: 0 -5px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 15px;
+        min-height: 80px;
+    }
+
+    .track::before,
+    .track::after {
+        display: none;
     }
 
     .track-info {
-        margin-top: 30px;
-        margin-bottom: 15px;
+        margin-top: 0;
+        margin-bottom: 0;
+        flex: 0 0 120px;
+        z-index: auto;
     }
 
     .track-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        margin-bottom: 4px;
     }
 
     .track-meta {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+        gap: 2px;
         flex-direction: column;
-        gap: 5px;
         align-items: flex-start;
     }
 
     .waveform-container {
+        flex: 1;
         flex-direction: row;
         gap: 10px;
-        padding: 5px;
-        flex-wrap: wrap;
+        padding: 0;
+        align-items: center;
+        min-width: 0;
     }
 
     .waveform {
         flex: 1;
-        min-width: 200px;
-        height: 80px;
+        height: 50px;
+        min-width: 100px;
         max-width: none;
         touch-action: manipulation;
     }
 
     .play-button {
-        width: 50px;
-        height: 50px;
-        font-size: 1rem;
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
         flex-shrink: 0;
     }
 
     .dm-link {
-        font-size: 0.75rem;
-        padding: 6px 10px;
+        font-size: 0.7rem;
+        padding: 4px 8px;
         flex-shrink: 0;
-        align-self: center;
+        white-space: nowrap;
     }
 
     .social-links {
@@ -337,7 +352,7 @@ body {
 
 @media (max-width: 480px) {
     .container {
-        padding: 30px 10px;
+        padding: 30px 8px;
     }
 
     .banner-item {
@@ -345,36 +360,39 @@ body {
         padding: 0 15px;
     }
 
-    .waveform-container {
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
+    .track {
+        padding: 12px;
+        gap: 10px;
+        min-height: 70px;
     }
 
-    .waveform {
-        width: 100%;
-        min-width: unset;
-        height: 70px;
-        order: 1;
+    .track-info {
+        flex: 0 0 100px;
     }
 
-    .play-button {
-        width: 45px;
-        height: 45px;
-        order: 2;
-        align-self: flex-start;
-    }
-
-    .dm-link {
-        order: 3;
-        align-self: flex-end;
-        font-size: 0.7rem;
-        padding: 5px 8px;
+    .track-title {
+        font-size: 0.9rem;
+        margin-bottom: 2px;
     }
 
     .track-meta {
-        flex-direction: column;
-        gap: 3px;
-        align-items: flex-start;
+        font-size: 0.7rem;
+        gap: 1px;
+    }
+
+    .waveform {
+        height: 45px;
+        min-width: 80px;
+    }
+
+    .play-button {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+
+    .dm-link {
+        font-size: 0.65rem;
+        padding: 3px 6px;
     }
 }
