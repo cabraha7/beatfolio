@@ -61,16 +61,10 @@ body {
     font-size: 1.4rem;
     font-weight: 600;
     color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     padding: 0 25px;
     letter-spacing: 1px;
 }
 
-.banner-separator {
-    font-size: 1.4rem;
-    color: rgba(255, 255, 255, 0.4);
-    margin: 0 15px;
-}
 
 .social-links {
     display: flex;
@@ -264,48 +258,123 @@ body {
 
 @media (max-width: 768px) {
     .container {
-        padding: 40px 20px;
+        padding: 40px 15px;
     }
 
-    .artist-name {
-        font-size: 2.2rem;
-        letter-spacing: 2px;
+    .scrolling-banner {
+        height: 50px;
+    }
+
+    .banner-item {
+        font-size: 1.2rem;
+        padding: 0 20px;
+    }
+
+
+    .header {
+        margin-top: 70px;
     }
 
     .track {
         padding: 15px;
+        margin: 0 -5px;
     }
 
     .track-info {
         margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    .track-title {
+        font-size: 1.1rem;
+    }
+
+    .track-meta {
+        font-size: 0.8rem;
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
     }
 
     .waveform-container {
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: row;
+        gap: 10px;
+        padding: 5px;
+        flex-wrap: wrap;
     }
 
     .waveform {
-        width: 100%;
+        flex: 1;
+        min-width: 200px;
+        height: 80px;
+        max-width: none;
+        touch-action: manipulation;
+    }
+
+    .play-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .dm-link {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        flex-shrink: 0;
+        align-self: center;
     }
 
     .social-links {
         gap: 20px;
     }
+
+    .social-icon {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 30px 15px;
+        padding: 30px 10px;
     }
 
-    .artist-name {
-        font-size: 1.8rem;
+    .banner-item {
+        font-size: 1rem;
+        padding: 0 15px;
+    }
+
+    .waveform-container {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .waveform {
+        width: 100%;
+        min-width: unset;
+        height: 70px;
+        order: 1;
+    }
+
+    .play-button {
+        width: 45px;
+        height: 45px;
+        order: 2;
+        align-self: flex-start;
+    }
+
+    .dm-link {
+        order: 3;
+        align-self: flex-end;
+        font-size: 0.7rem;
+        padding: 5px 8px;
     }
 
     .track-meta {
         flex-direction: column;
-        gap: 5px;
+        gap: 3px;
         align-items: flex-start;
     }
 }

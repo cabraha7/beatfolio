@@ -68,6 +68,7 @@ class AudioPlayer {
                 }
             });
 
+            // Mouse events
             canvas.addEventListener('mousedown', (e) => {
                 if (this.currentTrack === track && this.currentAudio) {
                     this.isDragging = true;
@@ -89,6 +90,32 @@ class AudioPlayer {
                 this.isDragging = false;
             });
 
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (this.currentTrack === track && this.currentAudio) {
+                    this.isDragging = true;
+                    this.handleTouchScrub(e, canvas);
+                }
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (this.isDragging && this.currentTrack === track && this.currentAudio) {
+                    this.handleTouchScrub(e, canvas);
+                }
+            });
+
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.isDragging = false;
+            });
+
+            canvas.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.isDragging = false;
+            });
+
             // Add cursor styling for interactive waveform
             canvas.style.cursor = 'pointer';
         });
@@ -97,6 +124,15 @@ class AudioPlayer {
     handleScrub(e, canvas) {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
+        const progress = Math.max(0, Math.min(1, x / rect.width));
+        const newTime = progress * this.currentAudio.duration;
+        this.currentAudio.currentTime = newTime;
+    }
+
+    handleTouchScrub(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0] || e.changedTouches[0];
+        const x = touch.clientX - rect.left;
         const progress = Math.max(0, Math.min(1, x / rect.width));
         const newTime = progress * this.currentAudio.duration;
         this.currentAudio.currentTime = newTime;
