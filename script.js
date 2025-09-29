@@ -33,17 +33,28 @@ class AudioPlayer {
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
             '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
             '#FFFF00', '#ADFF2F', '#00FF00', '#FFD700', '#FFA500',
-            '#E6E6FA', '#DDA0DD', '#DA70D6', '#BA55D3', '#9370DB',
+            '#E6E6FA', '#DA70D6', '#BA55D3', '#9370DB',
             '#FF69B4', '#FF1493', '#DC143C', '#B22222', '#8B0000',
             '#00CED1', '#40E0D0', '#48D1CC', '#00FFFF', '#7FFFD4',
             '#98FB98', '#90EE90', '#32CD32', '#228B22', '#006400'
         ];
 
-        document.querySelectorAll('.track').forEach((track, index) => {
+        const usedColors = new Set();
+        const tracks = document.querySelectorAll('.track');
+
+        tracks.forEach((track, index) => {
             const src = track.dataset.src;
-            // Randomize colors each time - no consistency needed
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            this.trackColors.set(src, randomColor);
+            let selectedColor;
+
+            // Ensure no duplicate colors by cycling through available colors
+            if (index < colors.length) {
+                selectedColor = colors[index];
+            } else {
+                // If more tracks than colors, start reusing but with some spacing
+                selectedColor = colors[index % colors.length];
+            }
+
+            this.trackColors.set(src, selectedColor);
         });
     }
 
@@ -460,7 +471,7 @@ class AudioPlayer {
                                     : waveform[currentIndex - 1];
 
                                 const amplitudeIncrease = currentAmplitude - prevAmplitude;
-                                if (amplitudeIncrease > 0.3 && currentAmplitude > 0.7) {
+                                if (amplitudeIncrease > 0.4 && currentAmplitude > 0.8 && Math.random() > 0.8) {
                                     this.lightningEffect.trigger();
                                 }
                             }
@@ -604,40 +615,54 @@ class AudioPlayer {
         const barWidth = (width / dpr) / barCount;
         const dataStep = Math.floor(frequencyData.length / barCount);
 
-        // Clean, minimal bars without gradients
-        ctx.fillStyle = color;
+        // Enhanced bars with better visibility
+        const gradient = ctx.createLinearGradient(0, 0, 0, height / dpr);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(0.5, this.lightenColor(color, 0.2));
+        gradient.addColorStop(1, color);
+        ctx.fillStyle = gradient;
+
+        // Add subtle shadow for depth
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
 
         // Draw frequency bars
         for (let i = 0; i < barCount; i++) {
             const dataIndex = i * dataStep;
             const amplitude = frequencyData[dataIndex] / 255; // Normalize to 0-1
-            const barHeight = amplitude * (height / dpr) * 0.7;
+            const barHeight = amplitude * (height / dpr) * 0.8; // Increased height for better visibility
 
             const x = i * barWidth;
             const y = centerY - (barHeight / 2);
 
-            // Minimal spacing and clean edges
-            const actualBarWidth = Math.max(1, barWidth * 0.9);
+            // Slightly wider bars for better visibility
+            const actualBarWidth = Math.max(2, barWidth * 0.95);
             const barX = x + (barWidth - actualBarWidth) / 2;
 
             // Draw clean bar with rounded edges (fallback for older browsers)
             if (ctx.roundRect) {
                 ctx.beginPath();
-                ctx.roundRect(barX, y, actualBarWidth, barHeight, 1);
+                ctx.roundRect(barX, y, actualBarWidth, barHeight, 2);
                 ctx.fill();
             } else {
                 ctx.fillRect(barX, y, actualBarWidth, barHeight);
             }
         }
 
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
         // Update rain and lightning effects based on frequency data
         const avgAmplitude = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length / 255;
         this.rainEffect.updateIntensity(avgAmplitude);
 
-        // Trigger lightning on bass hits
+        // Trigger lightning on bass hits (reduced frequency)
         const bassData = frequencyData.slice(0, 8);
         const bassLevel = bassData.reduce((a, b) => a + b, 0) / bassData.length;
-        if (bassLevel > 160) {
+        if (bassLevel > 180 && Math.random() > 0.7) {
             this.lightningEffect.trigger();
         }
     }
@@ -780,7 +805,7 @@ class LightningEffect {
         this.canvas.style.width = '100%';
         this.canvas.style.height = '100%';
         this.canvas.style.pointerEvents = 'none';
-        this.canvas.style.zIndex = '10';
+        this.canvas.style.zIndex = '-1';
 
         document.body.appendChild(this.canvas);
 
