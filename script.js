@@ -214,23 +214,10 @@ class AudioPlayer {
         const height = canvas.height;
         const color = this.trackColors.get(src) || '#2ECC71';
 
-        // Enable high-quality rendering
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
+        ctx.clearRect(0, 0, width, height);
 
-        // Scale for high DPI displays
-        const dpr = window.devicePixelRatio || 1;
-        if (dpr !== 1) {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-        }
-
-        ctx.clearRect(0, 0, width / dpr, height / dpr);
-
-        const centerY = (height / dpr) / 2;
-        const stepX = (width / dpr) / (waveform.length - 1);
+        const centerY = height / 2;
+        const stepX = width / (waveform.length - 1);
 
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
@@ -244,7 +231,7 @@ class AudioPlayer {
         for (let i = 0; i < waveform.length; i++) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY - (amplitude * (height / dpr) * 0.4);
+            const y = centerY - (amplitude * height * 0.4);
 
             if (i === 0) {
                 ctx.lineTo(x, y);
@@ -252,7 +239,7 @@ class AudioPlayer {
                 ctx.lineTo(x, y);
             }
         }
-        ctx.lineTo(width / dpr, centerY);
+        ctx.lineTo(width, centerY);
         ctx.stroke();
 
         // Draw lower spiky waveform (mirrored)
@@ -262,7 +249,7 @@ class AudioPlayer {
         for (let i = 0; i < waveform.length; i++) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY + (amplitude * (height / dpr) * 0.4);
+            const y = centerY + (amplitude * height * 0.4);
 
             if (i === 0) {
                 ctx.lineTo(x, y);
@@ -270,7 +257,7 @@ class AudioPlayer {
                 ctx.lineTo(x, y);
             }
         }
-        ctx.lineTo(width / dpr, centerY);
+        ctx.lineTo(width, centerY);
         ctx.stroke();
     }
 
@@ -281,23 +268,10 @@ class AudioPlayer {
         const baseColor = this.trackColors.get(src) || '#2ECC71';
         const progressedColor = this.darkenColor(baseColor, 0.3);
 
-        // Enable high-quality rendering
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
+        ctx.clearRect(0, 0, width, height);
 
-        // Scale for high DPI displays
-        const dpr = window.devicePixelRatio || 1;
-        if (dpr !== 1) {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-        }
-
-        ctx.clearRect(0, 0, width / dpr, height / dpr);
-
-        const centerY = (height / dpr) / 2;
-        const stepX = (width / dpr) / (waveform.length - 1);
+        const centerY = height / 2;
+        const stepX = width / (waveform.length - 1);
         const progressIndex = Math.floor(progress * waveform.length);
 
         ctx.lineWidth = 2;
@@ -314,7 +288,7 @@ class AudioPlayer {
             for (let i = 0; i <= progressIndex && i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY - (amplitude * (height / dpr) * 0.4);
+                const y = centerY - (amplitude * height * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -325,7 +299,7 @@ class AudioPlayer {
             for (let i = 0; i <= progressIndex && i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY + (amplitude * (height / dpr) * 0.4);
+                const y = centerY + (amplitude * height * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -342,7 +316,7 @@ class AudioPlayer {
             for (let i = progressIndex; i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY - (amplitude * (height / dpr) * 0.4);
+                const y = centerY - (amplitude * height * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -353,19 +327,19 @@ class AudioPlayer {
             for (let i = progressIndex; i < waveform.length; i++) {
                 const x = i * stepX;
                 const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-                const y = centerY + (amplitude * (height / dpr) * 0.4);
+                const y = centerY + (amplitude * height * 0.4);
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
         }
 
         // Draw progress indicator
-        const progressX = progress * (width / dpr);
+        const progressX = progress * width;
         ctx.strokeStyle = '#FF3B30';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(progressX, 0);
-        ctx.lineTo(progressX, height / dpr);
+        ctx.lineTo(progressX, height);
         ctx.stroke();
     }
 
