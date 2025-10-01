@@ -208,19 +208,35 @@ class AudioPlayer {
                 });
             }
 
-            // Better normalization to avoid large empty spaces
-            const maxCombined = Math.max(...filteredData.map(d => d.combined));
-            const minCombined = Math.min(...filteredData.map(d => d.combined));
-            const range = maxCombined - minCombined;
-            const multiplier = range > 0 ? 0.8 / range : 1; // Use 80% of available space
+            // Advanced normalization for realistic waveforms
+            const combinedValues = filteredData.map(d => d.combined);
+            const maxCombined = Math.max(...combinedValues);
+            const avgCombined = combinedValues.reduce((a, b) => a + b, 0) / combinedValues.length;
+
+            // Use dynamic range compression to avoid empty spaces
+            const threshold = avgCombined * 0.3; // 30% of average as minimum
+            const compressionRatio = 0.7; // Compress loud parts
 
             return filteredData.map(d => {
-                const normalized = ((d.combined - minCombined) * multiplier) + 0.1; // Add 10% baseline
+                let normalized = d.combined;
+
+                // Apply threshold and compression
+                if (normalized < threshold) {
+                    normalized = threshold + (normalized / threshold) * 0.2;
+                } else if (normalized > avgCombined) {
+                    // Compress loud parts
+                    const excess = normalized - avgCombined;
+                    normalized = avgCombined + (excess * compressionRatio);
+                }
+
+                // Final normalization to 0.2-0.9 range (no silent parts)
+                const finalValue = 0.2 + (normalized / maxCombined) * 0.7;
+
                 return {
-                    average: ((d.average - minCombined) * multiplier) + 0.1,
-                    peak: ((d.peak - minCombined) * multiplier) + 0.1,
-                    rms: ((d.rms - minCombined) * multiplier) + 0.1,
-                    combined: Math.min(0.95, normalized) // Cap at 95% to avoid clipping
+                    average: Math.min(0.85, Math.max(0.15, (d.average / maxCombined) * 0.7 + 0.15)),
+                    peak: Math.min(0.9, Math.max(0.2, (d.peak / maxCombined) * 0.7 + 0.2)),
+                    rms: Math.min(0.8, Math.max(0.1, (d.rms / maxCombined) * 0.7 + 0.1)),
+                    combined: Math.min(0.95, Math.max(0.2, finalValue))
                 };
             });
         } catch (error) {
@@ -274,61 +290,41 @@ class AudioPlayer {
         ctx.clearRect(0, 0, displayWidth, displayHeight);
 
         const centerY = displayHeight / 2;
-        const stepX = displayWidth / (waveform.length - 1);
 
+        // Draw many thin vertical lines for realistic waveform appearance
+        const barCount = Math.min(displayWidth, 300); // More bars for detail
+        const barWidth = displayWidth / barCount;
+
+        ctx.fillStyle = color;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineWidth = 0.8;
 
-        // Create a smoother, more detailed waveform
-        ctx.beginPath();
+        for (let i = 0; i < barCount; i++) {
+            const dataIndex = Math.floor((i / barCount) * waveform.length);
+            const amplitude = typeof waveform[dataIndex] === 'object' ? waveform[dataIndex].combined : waveform[dataIndex];
 
-        for (let i = 0; i < waveform.length; i++) {
-            const x = i * stepX;
-            const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
+            // Make waveform more dynamic - ensure no empty spaces
+            const normalizedAmplitude = Math.max(0.05, amplitude * 0.9); // Minimum 5%, max 90%
+            const barHeight = normalizedAmplitude * displayHeight * 0.8; // Use 80% of height
 
-            // Upper half
-            const yTop = centerY - (amplitude * displayHeight * 0.35);
-            // Lower half
-            const yBottom = centerY + (amplitude * displayHeight * 0.35);
+            const x = i * barWidth;
+            const y = centerY - (barHeight / 2);
 
-            if (i === 0) {
-                ctx.moveTo(x, yTop);
+            // Draw thin vertical line
+            if (barWidth < 2) {
+                // For very thin bars, use fillRect
+                ctx.fillRect(x, y, Math.max(0.5, barWidth * 0.8), barHeight);
             } else {
-                // Use quadratic curves for smoother lines
-                const prevX = (i - 1) * stepX;
-                const controlX = (prevX + x) / 2;
-                ctx.quadraticCurveTo(controlX, yTop, x, yTop);
+                // For wider bars, use rounded rectangles
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(x + barWidth * 0.1, y, barWidth * 0.8, barHeight, 0.5);
+                } else {
+                    ctx.rect(x + barWidth * 0.1, y, barWidth * 0.8, barHeight);
+                }
+                ctx.fill();
             }
         }
-
-        // Continue to bottom part of waveform
-        for (let i = waveform.length - 1; i >= 0; i--) {
-            const x = i * stepX;
-            const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const yBottom = centerY + (amplitude * displayHeight * 0.35);
-
-            if (i === waveform.length - 1) {
-                ctx.lineTo(x, yBottom);
-            } else {
-                const nextX = (i + 1) * stepX;
-                const controlX = (nextX + x) / 2;
-                ctx.quadraticCurveTo(controlX, yBottom, x, yBottom);
-            }
-        }
-
-        ctx.closePath();
-
-        // Fill with subtle gradient
-        const gradient = ctx.createLinearGradient(0, centerY - displayHeight * 0.35, 0, centerY + displayHeight * 0.35);
-        gradient.addColorStop(0, color + '40'); // 25% opacity at top
-        gradient.addColorStop(0.5, color + '20'); // 12% opacity at center
-        gradient.addColorStop(1, color + '40'); // 25% opacity at bottom
-
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        ctx.stroke();
     }
 
     drawAnimatedWaveform(canvas, waveform, progress = 0, src) {
