@@ -3,179 +3,356 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIRMAI - Producer</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>GIRMAI - Enter The City</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            background: url('Background.png') center center/cover no-repeat fixed;
+            background-color: #05480D;
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Atmospheric overlay */
+        .atmospheric-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.1) 0%, rgba(5, 72, 13, 0.8) 50%, rgba(0, 0, 0, 0.9) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Main container */
+        .landing-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2;
+        }
+
+        /* Clickable area */
+        .clickable-area {
+            display: inline-block;
+            padding: 50px;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .clickable-area:hover {
+            background-color: rgba(0, 255, 0, 0.05);
+        }
+
+        /* Laptop centerpiece */
+        .laptop-container {
+            position: relative;
+            margin-bottom: 60px;
+            display: inline-block;
+        }
+
+        .laptop-image {
+            width: 300px;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 0, 0.3));
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: float 4s ease-in-out infinite, pulse-glow 3s ease-in-out infinite;
+        }
+
+        .clickable-area:hover .laptop-image {
+            filter: drop-shadow(0 0 40px rgba(0, 255, 0, 0.8)) drop-shadow(0 0 80px rgba(0, 255, 0, 0.4));
+            transform: scale(1.05);
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Pulsating glow animation for laptop */
+        @keyframes pulse-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(0, 255, 0, 0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 35px rgba(0, 255, 0, 0.6)) drop-shadow(0 0 60px rgba(0, 255, 0, 0.2));
+            }
+        }
+
+        /* Enter text */
+        .enter-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: white;
+            text-shadow:
+                0 0 10px rgba(0, 255, 0, 0.5),
+                0 0 20px rgba(0, 255, 0, 0.3),
+                0 0 40px rgba(0, 255, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: pulse 2s ease-in-out infinite alternate;
+            white-space: nowrap;
+        }
+
+        .clickable-area:hover .enter-text {
+            text-shadow:
+                0 0 15px rgba(0, 255, 0, 0.8),
+                0 0 30px rgba(0, 255, 0, 0.6),
+                0 0 60px rgba(0, 255, 0, 0.3);
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Fade transition overlay */
+        .fade-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+
+        .fade-overlay.active {
+            opacity: 1;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .laptop-image {
+                width: 250px;
+            }
+
+            .enter-text {
+                font-size: 1.4rem;
+                letter-spacing: 3px;
+            }
+
+            .clickable-area {
+                padding: 40px;
+            }
+
+            .landing-container {
+                padding: 0 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .laptop-image {
+                width: 200px;
+            }
+
+            .enter-text {
+                font-size: 1.2rem;
+                letter-spacing: 2px;
+            }
+
+            .clickable-area {
+                padding: 30px;
+            }
+        }
+
+        /* Click ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 255, 0, 0.3);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="scrolling-banner">
-            <div class="banner-content">
-                <span class="banner-item">Girmai</span>
-                <span class="banner-item">Gir·mai ・/ˈGUR-my/</span>
-                <span class="banner-item">Flood the city</span>
-                <span class="banner-item">Girmai</span>
-                <span class="banner-item">Gir·mai ・/ˈGUR-my/</span>
-                <span class="banner-item">Flood the city</span>
-                <span class="banner-item">Girmai</span>
-                <span class="banner-item">Gir·mai ・/ˈGUR-my/</span>
-                <span class="banner-item">Flood the city</span>
+    <div class="atmospheric-overlay"></div>
+
+    <div class="landing-container">
+        <div class="clickable-area">
+            <div class="laptop-container">
+                <img src="laptop.png" alt="Enter The City" class="laptop-image">
             </div>
+            <div class="enter-text">ENTER THE CITY</div>
         </div>
-
-        <header class="header">
-            <div class="social-links">
-                <a href="https://instagram.com/girmaiii" target="_blank" class="social-link">
-                    <img src="instagram.svg" alt="Instagram" class="social-icon">
-                </a>
-                <a href="https://youtube.com/@girmai6745" target="_blank" class="social-link">
-                    <img src="youtube.svg" alt="YouTube" class="social-icon">
-                </a>
-            </div>
-        </header>
-
-        <main class="tracks">
-            <div class="track" data-src="beats/Fangs 132BPM Girmai .mp3">
-                <div class="track-info">
-                    <h3 class="track-title">Fangs</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/cycle 128BPM Girmai.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">cycle</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/study 150BPM Girmai.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">study</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/Addis 143BPM Girmai.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">Addis</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/lysol 169BPM Girmai .mp3">
-                <div class="track-info">
-                    <h3 class="track-title">lysol</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/P365X 136BPM Girmai.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">P365X</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/coconut water 140BPM Girmai Fleur Delis .mp3">
-                <div class="track-info">
-                    <h3 class="track-title">coconut water</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai, Fleur Delis</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/yella 149BPM Girmai .mp3">
-                <div class="track-info">
-                    <h3 class="track-title">yella</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/Scars 165BPM Girmai Fleur Delis.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">Scars</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai, Fleur Delis</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-
-            <div class="track" data-src="beats/Breakfast 70BPM Girmai.mp3">
-                <div class="track-info">
-                    <h3 class="track-title">Breakfast</h3>
-                    <div class="track-meta">
-                        <span class="producer">Girmai</span>
-                    </div>
-                </div>
-                <div class="waveform-container">
-                    <canvas class="waveform" width="800" height="100"></canvas>
-                    <div class="play-button">▶</div>
-                    <a href="mailto:me@chrisgirmai.com" class="dm-link">Contact</a>
-                </div>
-            </div>
-        </main>
     </div>
 
-    <script src="script.js"></script>
+    <div class="fade-overlay"></div>
+
+    <script>
+        class LandingPage {
+            constructor() {
+                this.backgroundAudio = null;
+                this.clickAudio = null;
+                this.isTransitioning = false;
+                this.audioContext = null;
+
+                this.init();
+            }
+
+            async init() {
+                this.setupAudio();
+                this.setupEventListeners();
+                this.startBackgroundMusic();
+            }
+
+            setupAudio() {
+                // Create audio elements
+                this.backgroundAudio = new Audio('landingmusic.wav');
+                this.backgroundAudio.loop = true;
+                this.backgroundAudio.volume = 0.6;
+
+                this.clickAudio = new Audio('Pageclick.mp3');
+                this.clickAudio.volume = 0.8;
+
+                // Handle autoplay restrictions
+                this.backgroundAudio.addEventListener('canplaythrough', () => {
+                    this.backgroundAudio.play().catch(e => {
+                        console.log('Autoplay prevented, will start on user interaction');
+                    });
+                });
+            }
+
+            setupEventListeners() {
+                const clickableArea = document.querySelector('.clickable-area');
+
+                // Main click handler - only for clickable area
+                clickableArea.addEventListener('click', (e) => {
+                    if (!this.isTransitioning) {
+                        this.createRipple(e);
+                        this.handleClick();
+                    }
+                });
+
+                // Touch handler for mobile - only for clickable area
+                clickableArea.addEventListener('touchstart', (e) => {
+                    if (!this.isTransitioning) {
+                        this.createRipple(e.touches[0]);
+                        this.handleClick();
+                    }
+                });
+
+                // Start audio on any interaction (for autoplay restrictions)
+                clickableArea.addEventListener('click', () => {
+                    if (this.backgroundAudio.paused) {
+                        this.backgroundAudio.play().catch(e => console.log('Audio play failed'));
+                    }
+                }, { once: true });
+            }
+
+            createRipple(event) {
+                const ripple = document.createElement('div');
+                ripple.classList.add('ripple');
+
+                const x = event.clientX || event.pageX;
+                const y = event.clientY || event.pageY;
+
+                ripple.style.left = x - 25 + 'px';
+                ripple.style.top = y - 25 + 'px';
+                ripple.style.width = '50px';
+                ripple.style.height = '50px';
+
+                document.body.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+
+            async handleClick() {
+                if (this.isTransitioning) return;
+                this.isTransitioning = true;
+
+                try {
+                    // Play click sound
+                    await this.clickAudio.play();
+
+                    // Start fade out of background music
+                    this.fadeOutBackgroundMusic();
+
+                    // Start page transition after a short delay
+                    setTimeout(() => {
+                        this.transitionToMainSite();
+                    }, 200);
+
+                } catch (error) {
+                    console.log('Click audio failed to play:', error);
+                    // Continue with transition even if audio fails
+                    setTimeout(() => {
+                        this.transitionToMainSite();
+                    }, 200);
+                }
+            }
+
+            fadeOutBackgroundMusic() {
+                if (!this.backgroundAudio) return;
+
+                const fadeInterval = setInterval(() => {
+                    if (this.backgroundAudio.volume > 0.1) {
+                        this.backgroundAudio.volume -= 0.1;
+                    } else {
+                        this.backgroundAudio.volume = 0;
+                        this.backgroundAudio.pause();
+                        clearInterval(fadeInterval);
+                    }
+                }, 50);
+            }
+
+            transitionToMainSite() {
+                const fadeOverlay = document.querySelector('.fade-overlay');
+                fadeOverlay.classList.add('active');
+
+                // Navigate to main site after fade completes
+                setTimeout(() => {
+                    window.location.href = 'portfolio.html';
+                }, 1000);
+            }
+
+            startBackgroundMusic() {
+                // Try to start background music
+                this.backgroundAudio.load();
+            }
+        }
+
+        // Initialize landing page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new LandingPage();
+        });
+    </script>
 </body>
 </html>
