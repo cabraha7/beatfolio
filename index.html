@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIRMAI - Enter The City</title>
+    <title></title>
     <style>
         * {
             margin: 0;
@@ -52,9 +52,6 @@
             transition: background-color 0.3s ease;
         }
 
-        .clickable-area:hover {
-            background-color: rgba(0, 255, 0, 0.05);
-        }
 
         /* Laptop centerpiece */
         .laptop-container {
@@ -236,16 +233,49 @@
                 this.backgroundAudio = new Audio('landingmusic.wav');
                 this.backgroundAudio.loop = true;
                 this.backgroundAudio.volume = 0.6;
+                this.backgroundAudio.preload = 'auto';
 
                 this.clickAudio = new Audio('Pageclick.mp3');
                 this.clickAudio.volume = 0.8;
+                this.clickAudio.preload = 'auto';
 
-                // Handle autoplay restrictions
-                this.backgroundAudio.addEventListener('canplaythrough', () => {
-                    this.backgroundAudio.play().catch(e => {
-                        console.log('Autoplay prevented, will start on user interaction');
+                // More aggressive autoplay handling
+                this.tryAutoplay();
+            }
+
+            async tryAutoplay() {
+                try {
+                    // Attempt immediate autoplay
+                    await this.backgroundAudio.play();
+                    console.log('Autoplay successful');
+                } catch (error) {
+                    console.log('Autoplay blocked, setting up fallbacks');
+
+                    // Fallback 1: Try on any user interaction
+                    const startAudio = async () => {
+                        try {
+                            await this.backgroundAudio.play();
+                            document.removeEventListener('click', startAudio);
+                            document.removeEventListener('touchstart', startAudio);
+                            document.removeEventListener('keydown', startAudio);
+                            document.removeEventListener('mousemove', startAudio);
+                        } catch (e) {
+                            console.log('Audio start failed:', e);
+                        }
+                    };
+
+                    document.addEventListener('click', startAudio);
+                    document.addEventListener('touchstart', startAudio);
+                    document.addEventListener('keydown', startAudio);
+                    document.addEventListener('mousemove', startAudio, { once: true });
+
+                    // Fallback 2: Try again after page fully loads
+                    window.addEventListener('load', () => {
+                        setTimeout(() => {
+                            this.backgroundAudio.play().catch(() => {});
+                        }, 100);
                     });
-                });
+                }
             }
 
             setupEventListeners() {
@@ -267,25 +297,27 @@
                     }
                 });
 
-                // Start audio on any interaction (for autoplay restrictions)
+                // Ensure audio starts on clickable area interaction
                 clickableArea.addEventListener('click', () => {
                     if (this.backgroundAudio.paused) {
                         this.backgroundAudio.play().catch(e => console.log('Audio play failed'));
                     }
-                }, { once: true });
+                });
             }
 
             createRipple(event) {
                 const ripple = document.createElement('div');
                 ripple.classList.add('ripple');
 
+                // Get click position relative to the viewport
                 const x = event.clientX || event.pageX;
                 const y = event.clientY || event.pageY;
 
-                ripple.style.left = x - 25 + 'px';
-                ripple.style.top = y - 25 + 'px';
-                ripple.style.width = '50px';
-                ripple.style.height = '50px';
+                // Center the ripple on the click point
+                ripple.style.left = x - 50 + 'px';
+                ripple.style.top = y - 50 + 'px';
+                ripple.style.width = '100px';
+                ripple.style.height = '100px';
 
                 document.body.appendChild(ripple);
 

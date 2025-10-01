@@ -174,7 +174,7 @@ class AudioPlayer {
             const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
             const rawData = audioBuffer.getChannelData(0);
-            const samples = 800; // Much higher resolution for smoother spiky waveform
+            const samples = 400; // Balanced resolution for good detail
             const blockSize = Math.floor(rawData.length / samples);
             const filteredData = [];
 
@@ -182,29 +182,47 @@ class AudioPlayer {
                 let blockStart = blockSize * i;
                 let sum = 0;
                 let max = 0;
+                let rms = 0;
+
                 for (let j = 0; j < blockSize; j++) {
-                    const abs = Math.abs(rawData[blockStart + j]);
+                    const sample = rawData[blockStart + j];
+                    const abs = Math.abs(sample);
                     sum += abs;
                     max = Math.max(max, abs);
+                    rms += sample * sample;
                 }
-                // Use both average and peak for more dynamic spikes
+
+                // Calculate various amplitude measures
                 const average = sum / blockSize;
                 const peak = max;
+                const rmsValue = Math.sqrt(rms / blockSize);
+
+                // Create more realistic waveform with better amplitude distribution
+                const combined = (average * 0.4) + (peak * 0.3) + (rmsValue * 0.3);
+
                 filteredData.push({
                     average: average,
                     peak: peak,
-                    combined: (average * 0.7) + (peak * 0.3)
+                    rms: rmsValue,
+                    combined: combined
                 });
             }
 
+            // Better normalization to avoid large empty spaces
             const maxCombined = Math.max(...filteredData.map(d => d.combined));
-            const multiplier = maxCombined > 0 ? 1 / maxCombined : 1;
+            const minCombined = Math.min(...filteredData.map(d => d.combined));
+            const range = maxCombined - minCombined;
+            const multiplier = range > 0 ? 0.8 / range : 1; // Use 80% of available space
 
-            return filteredData.map(d => ({
-                average: d.average * multiplier,
-                peak: d.peak * multiplier,
-                combined: d.combined * multiplier
-            }));
+            return filteredData.map(d => {
+                const normalized = ((d.combined - minCombined) * multiplier) + 0.1; // Add 10% baseline
+                return {
+                    average: ((d.average - minCombined) * multiplier) + 0.1,
+                    peak: ((d.peak - minCombined) * multiplier) + 0.1,
+                    rms: ((d.rms - minCombined) * multiplier) + 0.1,
+                    combined: Math.min(0.95, normalized) // Cap at 95% to avoid clipping
+                };
+            });
         } catch (error) {
             console.error('Error generating waveform:', error);
             return this.generatePlaceholderData();
@@ -212,11 +230,26 @@ class AudioPlayer {
     }
 
     generatePlaceholderData() {
-        return Array.from({length: 800}, () => ({
-            average: Math.random() * 0.8 + 0.1,
-            peak: Math.random() * 0.8 + 0.1,
-            combined: Math.random() * 0.8 + 0.1
-        }));
+        const data = [];
+        const samples = 400;
+
+        for (let i = 0; i < samples; i++) {
+            // Create more realistic placeholder waveform
+            const base = 0.15 + Math.sin(i * 0.1) * 0.1; // Sine wave base
+            const noise = (Math.random() - 0.5) * 0.3; // Add some randomness
+            const peaks = Math.random() > 0.9 ? Math.random() * 0.4 : 0; // Occasional peaks
+
+            const amplitude = Math.max(0.05, Math.min(0.9, base + noise + peaks));
+
+            data.push({
+                average: amplitude * 0.8,
+                peak: amplitude,
+                rms: amplitude * 0.9,
+                combined: amplitude
+            });
+        }
+
+        return data;
     }
 
     drawStaticWaveform(canvas, waveform, src) {
@@ -244,44 +277,57 @@ class AudioPlayer {
         const stepX = displayWidth / (waveform.length - 1);
 
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Draw upper spiky waveform
+        // Create a smoother, more detailed waveform
         ctx.beginPath();
-        ctx.moveTo(0, centerY);
 
         for (let i = 0; i < waveform.length; i++) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY - (amplitude * displayHeight * 0.4);
+
+            // Upper half
+            const yTop = centerY - (amplitude * displayHeight * 0.35);
+            // Lower half
+            const yBottom = centerY + (amplitude * displayHeight * 0.35);
 
             if (i === 0) {
-                ctx.lineTo(x, y);
+                ctx.moveTo(x, yTop);
             } else {
-                ctx.lineTo(x, y);
+                // Use quadratic curves for smoother lines
+                const prevX = (i - 1) * stepX;
+                const controlX = (prevX + x) / 2;
+                ctx.quadraticCurveTo(controlX, yTop, x, yTop);
             }
         }
-        ctx.lineTo(displayWidth, centerY);
-        ctx.stroke();
 
-        // Draw lower spiky waveform (mirrored)
-        ctx.beginPath();
-        ctx.moveTo(0, centerY);
-
-        for (let i = 0; i < waveform.length; i++) {
+        // Continue to bottom part of waveform
+        for (let i = waveform.length - 1; i >= 0; i--) {
             const x = i * stepX;
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-            const y = centerY + (amplitude * displayHeight * 0.4);
+            const yBottom = centerY + (amplitude * displayHeight * 0.35);
 
-            if (i === 0) {
-                ctx.lineTo(x, y);
+            if (i === waveform.length - 1) {
+                ctx.lineTo(x, yBottom);
             } else {
-                ctx.lineTo(x, y);
+                const nextX = (i + 1) * stepX;
+                const controlX = (nextX + x) / 2;
+                ctx.quadraticCurveTo(controlX, yBottom, x, yBottom);
             }
         }
-        ctx.lineTo(displayWidth, centerY);
+
+        ctx.closePath();
+
+        // Fill with subtle gradient
+        const gradient = ctx.createLinearGradient(0, centerY - displayHeight * 0.35, 0, centerY + displayHeight * 0.35);
+        gradient.addColorStop(0, color + '40'); // 25% opacity at top
+        gradient.addColorStop(0.5, color + '20'); // 12% opacity at center
+        gradient.addColorStop(1, color + '40'); // 25% opacity at bottom
+
+        ctx.fillStyle = gradient;
+        ctx.fill();
         ctx.stroke();
     }
 
