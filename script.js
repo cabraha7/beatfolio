@@ -159,7 +159,10 @@ class AudioPlayer {
             try {
                 const waveform = await this.generateWaveform(src);
                 this.waveformData.set(src, waveform);
-                this.drawStaticWaveform(canvas, waveform, src);
+                // Force regeneration of waveform display
+                setTimeout(() => {
+                    this.drawStaticWaveform(canvas, waveform, src);
+                }, 10);
             } catch (error) {
                 console.error(`Failed to generate waveform for ${src}:`, error);
                 this.drawPlaceholderWaveform(canvas, src);
@@ -291,40 +294,61 @@ class AudioPlayer {
 
         const centerY = displayHeight / 2;
 
-        // Draw many thin vertical lines for realistic waveform appearance
-        const barCount = Math.min(displayWidth, 300); // More bars for detail
-        const barWidth = displayWidth / barCount;
+        // Create modern, smooth waveform with filled area
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
 
-        ctx.fillStyle = color;
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 0.8;
+        // Draw top curve
+        for (let i = 0; i < waveform.length; i++) {
+            const x = (i / (waveform.length - 1)) * displayWidth;
+            const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
 
-        for (let i = 0; i < barCount; i++) {
-            const dataIndex = Math.floor((i / barCount) * waveform.length);
-            const amplitude = typeof waveform[dataIndex] === 'object' ? waveform[dataIndex].combined : waveform[dataIndex];
+            // Ensure minimum amplitude to avoid empty spaces
+            const normalizedAmplitude = Math.max(0.15, Math.min(0.85, amplitude));
+            const y = centerY - (normalizedAmplitude * displayHeight * 0.4);
 
-            // Make waveform more dynamic - ensure no empty spaces
-            const normalizedAmplitude = Math.max(0.05, amplitude * 0.9); // Minimum 5%, max 90%
-            const barHeight = normalizedAmplitude * displayHeight * 0.8; // Use 80% of height
-
-            const x = i * barWidth;
-            const y = centerY - (barHeight / 2);
-
-            // Draw thin vertical line
-            if (barWidth < 2) {
-                // For very thin bars, use fillRect
-                ctx.fillRect(x, y, Math.max(0.5, barWidth * 0.8), barHeight);
+            if (i === 0) {
+                ctx.lineTo(x, y);
             } else {
-                // For wider bars, use rounded rectangles
-                ctx.beginPath();
-                if (ctx.roundRect) {
-                    ctx.roundRect(x + barWidth * 0.1, y, barWidth * 0.8, barHeight, 0.5);
-                } else {
-                    ctx.rect(x + barWidth * 0.1, y, barWidth * 0.8, barHeight);
-                }
-                ctx.fill();
+                // Use smooth curves between points
+                const prevX = ((i - 1) / (waveform.length - 1)) * displayWidth;
+                const controlX = (prevX + x) / 2;
+                ctx.quadraticCurveTo(controlX, y, x, y);
             }
         }
+
+        // Draw bottom curve (mirrored)
+        for (let i = waveform.length - 1; i >= 0; i--) {
+            const x = (i / (waveform.length - 1)) * displayWidth;
+            const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
+
+            const normalizedAmplitude = Math.max(0.15, Math.min(0.85, amplitude));
+            const y = centerY + (normalizedAmplitude * displayHeight * 0.4);
+
+            if (i === waveform.length - 1) {
+                ctx.lineTo(x, y);
+            } else {
+                const nextX = ((i + 1) / (waveform.length - 1)) * displayWidth;
+                const controlX = (nextX + x) / 2;
+                ctx.quadraticCurveTo(controlX, y, x, y);
+            }
+        }
+
+        ctx.closePath();
+
+        // Fill with gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, displayHeight);
+        gradient.addColorStop(0, color + '60'); // 40% opacity at top
+        gradient.addColorStop(0.5, color + '30'); // 20% opacity at center
+        gradient.addColorStop(1, color + '60'); // 40% opacity at bottom
+
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Add stroke outline
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.stroke();
     }
 
     drawAnimatedWaveform(canvas, waveform, progress = 0, src) {
