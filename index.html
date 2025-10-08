@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
+    <link rel="preload" href="laptop.png" as="image">
+    <link rel="preload" href="Background.jpg" as="image">
+    <link rel="preload" href="landingmusic.m4a" as="audio">
     <style>
         * {
             margin: 0;
@@ -13,7 +16,7 @@
 
         body {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-            background: url('Background.png') center center/cover no-repeat fixed;
+            background: url('Background.jpg') center center/cover no-repeat fixed;
             background-color: #05480D;
             color: white;
             min-height: 100vh;
@@ -203,7 +206,7 @@
     <div class="landing-container">
         <div class="clickable-area">
             <div class="laptop-container">
-                <img src="laptop.png" alt="Enter The City" class="laptop-image">
+                <img src="laptop.png" alt="Enter The City" class="laptop-image" loading="eager">
             </div>
             <div class="enter-text">ENTER THE CITY</div>
         </div>
@@ -230,7 +233,7 @@
 
             setupAudio() {
                 // Create audio elements
-                this.backgroundAudio = new Audio('landingmusic.wav');
+                this.backgroundAudio = new Audio('landingmusic.m4a');
                 this.backgroundAudio.loop = true;
                 this.backgroundAudio.volume = 0.6;
                 this.backgroundAudio.preload = 'auto';

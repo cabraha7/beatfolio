@@ -6,7 +6,7 @@
 
 body {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-    background: url('Background.png') center center/cover no-repeat fixed;
+    background: url('Background.jpg') center center/cover no-repeat fixed;
     background-color: #05480D;
     color: white;
     min-height: 100vh;

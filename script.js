@@ -294,61 +294,42 @@ class AudioPlayer {
 
         const centerY = displayHeight / 2;
 
-        // Create modern, smooth waveform with filled area
-        ctx.beginPath();
-        ctx.moveTo(0, centerY);
+        // Create detailed, realistic waveform with individual bars
+        const barCount = waveform.length;
+        const barWidth = displayWidth / barCount;
+        const barGap = Math.max(0.5, barWidth * 0.15); // Small gap between bars
 
-        // Draw top curve
-        for (let i = 0; i < waveform.length; i++) {
-            const x = (i / (waveform.length - 1)) * displayWidth;
+        for (let i = 0; i < barCount; i++) {
             const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
 
-            // Ensure minimum amplitude to avoid empty spaces
-            const normalizedAmplitude = Math.max(0.15, Math.min(0.85, amplitude));
-            const y = centerY - (normalizedAmplitude * displayHeight * 0.4);
+            // Much better amplitude scaling - fills canvas height more effectively
+            const normalizedAmplitude = Math.max(0.3, Math.min(0.95, amplitude));
+            const barHeight = normalizedAmplitude * displayHeight * 0.85; // Use 85% of canvas height
 
-            if (i === 0) {
-                ctx.lineTo(x, y);
-            } else {
-                // Use smooth curves between points
-                const prevX = ((i - 1) / (waveform.length - 1)) * displayWidth;
-                const controlX = (prevX + x) / 2;
-                ctx.quadraticCurveTo(controlX, y, x, y);
-            }
+            const x = i * barWidth;
+            const actualBarWidth = Math.max(1, barWidth - barGap);
+
+            // Create gradient for each bar
+            const barGradient = ctx.createLinearGradient(x, centerY - barHeight / 2, x, centerY + barHeight / 2);
+            barGradient.addColorStop(0, color + 'CC'); // 80% opacity at edges
+            barGradient.addColorStop(0.5, color + '99'); // 60% opacity at center
+            barGradient.addColorStop(1, color + 'CC'); // 80% opacity at edges
+
+            ctx.fillStyle = barGradient;
+
+            // Draw rounded rectangle bar
+            const barY = centerY - barHeight / 2;
+            const cornerRadius = Math.min(actualBarWidth / 3, 2);
+
+            ctx.beginPath();
+            ctx.roundRect(x, barY, actualBarWidth, barHeight, cornerRadius);
+            ctx.fill();
+
+            // Add subtle stroke for definition
+            ctx.strokeStyle = color + '40'; // 25% opacity
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
         }
-
-        // Draw bottom curve (mirrored)
-        for (let i = waveform.length - 1; i >= 0; i--) {
-            const x = (i / (waveform.length - 1)) * displayWidth;
-            const amplitude = typeof waveform[i] === 'object' ? waveform[i].combined : waveform[i];
-
-            const normalizedAmplitude = Math.max(0.15, Math.min(0.85, amplitude));
-            const y = centerY + (normalizedAmplitude * displayHeight * 0.4);
-
-            if (i === waveform.length - 1) {
-                ctx.lineTo(x, y);
-            } else {
-                const nextX = ((i + 1) / (waveform.length - 1)) * displayWidth;
-                const controlX = (nextX + x) / 2;
-                ctx.quadraticCurveTo(controlX, y, x, y);
-            }
-        }
-
-        ctx.closePath();
-
-        // Fill with gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, displayHeight);
-        gradient.addColorStop(0, color + '60'); // 40% opacity at top
-        gradient.addColorStop(0.5, color + '30'); // 20% opacity at center
-        gradient.addColorStop(1, color + '60'); // 40% opacity at bottom
-
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // Add stroke outline
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.stroke();
     }
 
     drawAnimatedWaveform(canvas, waveform, progress = 0, src) {

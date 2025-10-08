@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(brew list:*)",
+      "Bash(/dev/null)",
+      "Bash(sips:*)",
+      "Bash(ls:*)",
+      "Bash(awk:*)",
+      "Bash(npx:*)"
     ],
     "deny": [],
     "ask": []
