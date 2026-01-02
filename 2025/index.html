@@ -1,1 +1,670 @@
-1
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chris Girmai's MySpace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Verdana, Arial, sans-serif;
+            font-size: 12px;
+            background: #000;
+            color: #000;
+            overflow-x: hidden;
+            filter: contrast(1.1) brightness(0.95);
+        }
+
+        /* Background with tiled pattern */
+        #bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,0,0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 40%, rgba(0,255,200,0.35) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255,0,255,0.35) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(100,255,100,0.3) 0%, transparent 50%),
+                linear-gradient(180deg, #000811 0%, #001122 50%, #001a33 100%);
+            z-index: 0;
+        }
+
+        /* Film grain overlay */
+        #bg-pattern::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.08"/></svg>');
+            opacity: 0.4;
+        }
+
+        /* Decorative elements */
+        .deco {
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .circle-deco {
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.4);
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 60%);
+        }
+
+        .c1 { width: 220px; height: 220px; top: 80px; left: 30px; background: radial-gradient(circle at 35% 35%, rgba(255,255,0,0.85), rgba(255,255,0,0) 65%); filter: blur(1px); }
+        .c2 { width: 140px; height: 140px; top: 180px; right: 60px; background: radial-gradient(circle at 35% 35%, rgba(0,255,200,0.75), transparent 65%); filter: blur(0.8px); }
+        .c3 { width: 240px; height: 240px; bottom: 120px; left: 120px; background: radial-gradient(circle at 35% 35%, rgba(120,255,120,0.7), transparent 65%); border-color: rgba(255,255,255,0.4); filter: blur(1.2px); }
+        .c4 { width: 110px; height: 110px; top: 420px; left: 220px; background: radial-gradient(circle at 35% 35%, rgba(255,100,255,0.8), transparent 65%); filter: blur(0.6px); }
+        .c5 { width: 180px; height: 180px; bottom: 280px; right: 80px; background: radial-gradient(circle at 35% 35%, rgba(255,255,0,0.65), transparent 65%); filter: blur(1px); }
+        .c6 { width: 160px; height: 160px; top: 300px; right: 200px; background: radial-gradient(circle at 35% 35%, rgba(255,0,200,0.7), transparent 65%); filter: blur(0.9px); }
+
+        .star-deco {
+            color: #ffeb3b;
+            font-size: 40px;
+            text-shadow: 0 0 10px #ffeb3b;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        .s1 { top: 120px; left: 320px; font-size: 45px; }
+        .s2 { top: 280px; right: 180px; font-size: 28px; animation-delay: 0.5s; }
+        .s3 { bottom: 180px; left: 80px; font-size: 38px; animation-delay: 1s; }
+        .s4 { top: 520px; right: 220px; font-size: 32px; animation-delay: 0.3s; }
+        .s5 { top: 180px; right: 400px; font-size: 50px; animation-delay: 0.8s; }
+        .s6 { bottom: 300px; left: 280px; font-size: 25px; animation-delay: 1.2s; }
+
+        #container {
+            position: relative;
+            width: 900px;
+            margin: 20px auto;
+            z-index: 10;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px;
+        }
+
+        /* Profile Header */
+        #header {
+            background: linear-gradient(180deg, #4477cc 0%, #2255aa 100%);
+            border: 3px solid #001166;
+            padding: 0;
+            box-shadow: 0 0 15px rgba(0,100,255,0.4);
+        }
+
+        #header-top {
+            background: #0055dd;
+            padding: 6px 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            font-weight: bold;
+            color: #fff;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        #header-content {
+            padding: 12px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        #profile-pic {
+            width: 100px;
+            height: 100px;
+            border: 3px solid #fff;
+            background: #ddd;
+            float: left;
+            margin-right: 12px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        #profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #profile-info {
+            color: #fff;
+            padding-top: 5px;
+        }
+
+        #profile-info h1 {
+            font-size: 20px;
+            margin-bottom: 6px;
+            text-shadow: 2px 2px 3px #000;
+        }
+
+        #profile-info p {
+            margin: 2px 0;
+            font-size: 10px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .online {
+            background: #00ff00;
+            color: #000;
+            padding: 2px 6px;
+            font-weight: bold;
+            border: 2px solid #00cc00;
+            display: inline-block;
+            margin-top: 3px;
+            font-size: 10px;
+        }
+
+        /* Modules */
+        .module {
+            background: rgba(20,20,30,0.85);
+            border: 3px solid #00ffcc;
+            margin-bottom: 10px;
+            box-shadow: 0 0 12px rgba(0,255,200,0.3);
+        }
+
+        .module-header {
+            background: linear-gradient(180deg, #00ffcc 0%, #00ccaa 100%);
+            border-bottom: 3px solid #008877;
+            padding: 8px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #000;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .module-content {
+            padding: 12px;
+            background: rgba(10,10,20,0.7);
+            color: #ccc;
+        }
+
+        /* About section */
+        #about-content {
+            line-height: 1.6;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        #about-content strong {
+            color: #00ffcc;
+        }
+
+        .about-mini {
+            background: rgba(20,20,30,0.85);
+            border: 2px solid #00ffcc;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #aaa;
+            box-shadow: 0 0 10px rgba(0,255,200,0.2);
+        }
+
+        .about-mini strong {
+            color: #00ffcc;
+        }
+
+        /* Music Player */
+        #player {
+            background: #0a0a0a;
+            border: 2px solid #00ffcc;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0,255,200,0.3) inset;
+        }
+
+        #player-display {
+            background: #000;
+            border: 2px inset #00ffcc;
+            padding: 20px;
+            margin-bottom: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            min-height: 70px;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3) inset;
+        }
+
+        #now-playing {
+            color: #00ffcc;
+            font-size: 11px;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        #track-info {
+            font-size: 16px;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255,255,0,0.7);
+        }
+
+        #now-playing {
+            color: #00ffcc;
+            font-size: 11px;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        #track-info {
+            font-size: 16px;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255,255,0,0.7);
+        }
+
+        #now-playing {
+            color: #00ffcc;
+            font-size: 11px;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        #track-info {
+            font-size: 16px;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255,255,0,0.7);
+        }
+
+        #player-controls {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .btn {
+            background: linear-gradient(180deg, #00ffcc 0%, #00aa88 100%);
+            border: 2px outset #00ffcc;
+            padding: 10px 18px;
+            margin: 0 3px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            color: #000;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+            box-shadow: 0 0 10px rgba(0,255,200,0.5);
+        }
+
+        .btn:active {
+            border-style: inset;
+            box-shadow: 0 0 5px rgba(0,255,200,0.8) inset;
+        }
+
+        /* Playlist */
+        #playlist {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #000;
+            border: 2px inset #00ffcc;
+            padding: 5px;
+            box-shadow: 0 0 15px rgba(0,255,200,0.2) inset;
+            margin-top: 15px;
+        }
+
+        .track-item {
+            padding: 8px;
+            border-bottom: 1px solid #003333;
+            cursor: pointer;
+            background: rgba(0,20,20,0.5);
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .track-item:hover {
+            background: rgba(0,255,200,0.15);
+            color: #00ffcc;
+        }
+
+        .track-item.active {
+            background: linear-gradient(90deg, #00ffcc 0%, #00aa88 100%);
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0,255,200,0.5);
+        }
+
+        .track-num {
+            display: inline-block;
+            width: 28px;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+
+        .track-item.active .track-num {
+            color: #000;
+        }
+
+        /* Albums */
+        #albums-grid {
+            display: table;
+            width: 100%;
+            border-spacing: 8px;
+        }
+
+        .album-row {
+            display: table-row;
+        }
+
+        .album-cell {
+            display: table-cell;
+            width: 20%;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .album-box {
+            background: rgba(20,20,30,0.9);
+            border: 3px solid #ff00ff;
+            padding: 8px;
+            box-shadow: 0 0 12px rgba(255,0,255,0.4);
+        }
+
+        .album-cover {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #000;
+            border: 2px solid #ff00ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            filter: contrast(1.2);
+            overflow: hidden;
+        }
+
+        .album-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .album-title {
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #ff00ff;
+            text-shadow: 0 0 5px rgba(255,0,255,0.5);
+        }
+
+        #sidebar {
+            width: 200px;
+            vertical-align: top;
+        }
+
+        #main {
+            vertical-align: top;
+        }
+
+        .stats-box {
+            background: linear-gradient(180deg, #ff00ff 0%, #cc00cc 100%);
+            border: 3px solid #880088;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255,0,255,0.4);
+        }
+
+        .stat-item {
+            margin: 8px 0;
+            font-size: 11px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            display: block;
+            color: #ffff00;
+            text-shadow: 0 0 10px rgba(255,255,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-pattern"></div>
+    
+    <!-- Decorative circles -->
+    <div class="deco circle-deco c1"></div>
+    <div class="deco circle-deco c2"></div>
+    <div class="deco circle-deco c3"></div>
+    <div class="deco circle-deco c4"></div>
+    <div class="deco circle-deco c5"></div>
+    <div class="deco circle-deco c6"></div>
+    
+    <!-- Stars -->
+    <div class="deco star-deco s1">★</div>
+    <div class="deco star-deco s2">★</div>
+    <div class="deco star-deco s3">★</div>
+    <div class="deco star-deco s4">★</div>
+    <div class="deco star-deco s5">★</div>
+    <div class="deco star-deco s6">★</div>
+
+    <div id="container">
+        <!-- Header -->
+        <div id="header">
+            <div id="header-top">CHRIS GIRMAI'S PROFILE</div>
+            <div id="header-content">
+                <div id="profile-pic"><img src="boy1.jpg" alt="Chris Girmai"></div>
+                <div id="profile-info">
+                    <h1>Chris Girmai</h1>
+                    <p><strong>Male, 23 years old</strong></p>
+                    <p>Atlanta, GA</p>
+                    <p>United States</p>
+                    <p><strong>Last Login:</strong> December 31, 2025</p>
+                    <p><strong>Mood:</strong> focused 🎯</p>
+                    <span class="online">● ONLINE NOW</span>
+                </div>
+                <div style="clear:both"></div>
+            </div>
+        </div>
+
+        <!-- Main Layout Table -->
+        <table>
+            <tr>
+                <td id="sidebar">
+                    <!-- Stats -->
+                    <div class="stats-box">
+                        <div class="stat-item">
+                            <span class="stat-number">25</span>
+                            Top Songs
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">5</span>
+                            Top Albums
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">2025</span>
+                            Year
+                        </div>
+                    </div>
+
+                    <!-- Mini About -->
+                    <div class="about-mini">
+                        <strong>About:</strong><br>
+                        Time traveling government contractor. Temporal security clearance. Currently stationed in 2025. Making beats between assignments.
+                    </div>
+                </td>
+                <td id="main">
+                    <!-- Music Player -->
+                    <div class="module">
+                        <div class="module-header">♫ MY TOP 25 SONGS OF 2025</div>
+                        <div class="module-content">
+                            <div id="player">
+                                <div id="player-display">
+                                    <div id="now-playing">► NOW PLAYING:</div>
+                                    <div id="track-info">Select a track to play</div>
+                                </div>
+                                <div id="player-controls">
+                                    <button class="btn" onclick="prevTrack()">⏮</button>
+                                    <button class="btn" onclick="togglePlay()">▶</button>
+                                    <button class="btn" onclick="nextTrack()">⏭</button>
+                                </div>
+                                <div id="playlist"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Albums -->
+                    <div class="module">
+                        <div class="module-header">★ MY TOP 5 ALBUMS OF 2025 ★</div>
+                        <div class="module-content">
+                            <div id="albums-grid">
+                                <div class="album-row">
+                                    <div class="album-cell">
+                                        <div class="album-box">
+                                            <div class="album-cover"><img src="album1.jpg" alt="Highway"></div>
+                                            <div class="album-title">Highway - Count or Die</div>
+                                        </div>
+                                    </div>
+                                    <div class="album-cell">
+                                        <div class="album-box">
+                                            <div class="album-cover"><img src="album2.jpg" alt="More Chaos"></div>
+                                            <div class="album-title">More Chaos - Ken Carson, Playboi Carti & Destroy Lonely</div>
+                                        </div>
+                                    </div>
+                                    <div class="album-cell">
+                                        <div class="album-box">
+                                            <div class="album-cover"><img src="album3.jpg" alt="F.I.L.A 25"></div>
+                                            <div class="album-title">F.I.L.A 25 (Forever I Love Atlanta) - TM88</div>
+                                        </div>
+                                    </div>
+                                    <div class="album-cell">
+                                        <div class="album-box">
+                                            <div class="album-cover"><img src="album4.jpg" alt="Swag"></div>
+                                            <div class="album-title">Swag - Justin Bieber</div>
+                                        </div>
+                                    </div>
+                                    <div class="album-cell">
+                                        <div class="album-box">
+                                            <div class="album-cover"><img src="album5.jpg" alt="Rooster Slipped"></div>
+                                            <div class="album-title">Rooster Slipped - Rooster</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        const songs = [
+            { title: "popstar in da bits", artist: "Young Eman, Eline De Saint...", file: "Young Eman & Eline De Sainté Vherodia - popstar in da bits.mp3" },
+            { title: "Magic City", artist: "tana", file: "tana - Magic City.mp3" },
+            { title: "TRIM (with Future)", artist: "Playboi Carti, Future", file: "Playboi Carti & Future - TRIM.mp3" },
+            { title: "Receipt", artist: "fakemink, wasse", file: "fakemink - Receipt.mp3" },
+            { title: "chronic", artist: "sosocamo", file: "sosocamo - chronic.mp3" },
+            { title: "again", artist: "Swapa", file: "Swapa - Again.mp3" },
+            { title: "old habits", artist: "Swapa", file: "Swapa - old habits.mp3" },
+            { title: "RIP", artist: "Miguel", file: "Miguel - RIP (Audio).mp3" },
+            { title: "New Martyrs (Ride 4 U)", artist: "Miguel", file: "Miguel - New Martyrs (Ride 4 U) (Audio).mp3" },
+            { title: "TKOHHH", artist: "yaego", file: "yaego - TKOHHH.mp3" },
+            { title: "Fe en Rebelión", artist: "yaego", file: "yaego - Fe en Rebelión.mp3" },
+            { title: "B.A.B", artist: "Tm88, Tracy T", file: "TM88 - Tm88 & Tracy T - B.A.B.mp3" },
+            { title: "Stuff Man", artist: "Tm88, Yung L.A.", file: "TM88 - Tm88 & Yung L.A. - Stuff Man.mp3" },
+            { title: "OMG! WTF! (Only when ...)", artist: "Rooster", file: "Rooster - OMG! WTF! (Only when it's lonely).mp3" },
+            { title: "Best Friend?", artist: "Rooster", file: "Rooster - Best Friend?.mp3" },
+            { title: "The Birds Don't Sing", artist: "Clipse, John Legend, ...", file: "John Legend, Clipse & Voices of Fire - The Birds Don't Sing.mp3" },
+            { title: "TELEPATHY LOVE (feat. ...)", artist: "BNYX®, Clara La San", file: "BNYX & Clara La San - TELEPATHY LOVE.mp3" },
+            { title: "TOO LONG", artist: "Justin Bieber", file: "Justin Bieber - TOO LONG (Audio).mp3" },
+            { title: "13MOS", artist: "Aminé", file: "Aminé - 13MOS.mp3" },
+            { title: "OverTh!nking", artist: "LUCKI", file: "LUCKI - OverTh!nking.mp3" },
+            { title: "Canada Dry", artist: "Rx Papi", file: "Rx Papi - Canada Dry.mp3" },
+            { title: "TOO CLOSE TO GOD", artist: "Lido", file: "Lido - TOO CLOSE TO GOD.mp3" },
+            { title: "Fire Your Manager (feat...)", artist: "YoungBoy Never Broke ...", file: "NBA YoungBoy - Fire Your Manager (Ft. Playboi Carti) (432hz).mp3" },
+            { title: "Stripper Bowl", artist: "Ray J, WhoisTruth", file: "Ray J, WhoisTruth - Stripper Bowl.mp3" },
+            { title: "Yung OGee", artist: "Rio Da Yung Og", file: "Rio Da Yung Og - Yung OGee.mp3" }
+        ];
+
+        // Audio player
+        const audio = new Audio();
+        let currentTrack = 0;
+        let isPlaying = false;
+
+        audio.addEventListener('ended', () => {
+            nextTrack();
+        });
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlist');
+            if (!container) {
+                console.error('Playlist container not found!');
+                return;
+            }
+            container.innerHTML = songs.map((song, i) => `
+                <div class="track-item ${i === 0 ? 'active' : ''}" onclick="selectTrack(${i})">
+                    <span class="track-num">${i + 1}.</span>
+                    <strong>${song.title}</strong> - ${song.artist}
+                </div>
+            `).join('');
+        }
+
+        function selectTrack(index) {
+            currentTrack = index;
+            const song = songs[currentTrack];
+            audio.src = song.file;
+            updateDisplay();
+            if (isPlaying) {
+                audio.play();
+            }
+        }
+
+        function updateDisplay() {
+            const song = songs[currentTrack];
+            document.getElementById('track-info').innerHTML = `${song.title}<br><span style="font-size:12px;color:#00ff00">${song.artist}</span>`;
+            
+            document.querySelectorAll('.track-item').forEach((el, i) => {
+                el.classList.toggle('active', i === currentTrack);
+            });
+        }
+
+        function togglePlay() {
+            const song = songs[currentTrack];
+            if (!audio.src || audio.src.indexOf(song.file) === -1) {
+                audio.src = song.file;
+            }
+            
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                event.target.textContent = '▶';
+            } else {
+                audio.play();
+                isPlaying = true;
+                event.target.textContent = '⏸';
+            }
+        }
+
+        function nextTrack() {
+            currentTrack = (currentTrack + 1) % songs.length;
+            const song = songs[currentTrack];
+            audio.src = song.file;
+            updateDisplay();
+            if (isPlaying) {
+                audio.play();
+            }
+        }
+
+        function prevTrack() {
+            currentTrack = currentTrack <= 0 ? songs.length - 1 : currentTrack - 1;
+            const song = songs[currentTrack];
+            audio.src = song.file;
+            updateDisplay();
+            if (isPlaying) {
+                audio.play();
+            }
+        }
+
+        renderPlaylist();
+        updateDisplay();
+    </script>
+</body>
+</html>
